@@ -10,25 +10,23 @@ import android.view.View
 import android.widget.Button
 import android.widget.ImageView
 import android.widget.TextView
-import androidx.camera.core.ImageCapture
 import com.du.de.demoimage.ml.MobilenetV110224Quant
 import org.tensorflow.lite.DataType
 import org.tensorflow.lite.support.image.TensorImage
 import org.tensorflow.lite.support.tensorbuffer.TensorBuffer
-import java.io.File
-import java.util.concurrent.ExecutorService
+
 
 @Suppress("DEPRECATION")
 class MainActivity : AppCompatActivity() {
 
-    private lateinit var bitmap: Bitmap
+    private var bitmap: Bitmap? = null
     private lateinit var imageView: ImageView
 
     override fun onCreate(savedInstanceState: Bundle?) {
         super.onCreate(savedInstanceState)
         setContentView(R.layout.activity_main)
 
-        imageView = findViewById(R.id.pvViewFinder)
+        imageView = findViewById(R.id.imageView)
         val fileName = "labels.txt"
         val inputString = application.assets.open(fileName).bufferedReader().use { it.readLine() }
         val townList = inputString.split("\n")
@@ -44,26 +42,28 @@ class MainActivity : AppCompatActivity() {
 
         }
 
-        val resized: Bitmap = Bitmap.createScaledBitmap(bitmap, 224, 224, true)
-        val model = MobilenetV110224Quant.newInstance(this)
+        bitmap?.let {
+            val resized: Bitmap = Bitmap.createScaledBitmap(it, 224, 224, true)
+            val model = MobilenetV110224Quant.newInstance(this)
 
-        val inputFeature0 = TensorBuffer.createFixedSize(intArrayOf(1, 224, 224, 3), DataType.UINT8)
+            val inputFeature0 = TensorBuffer.createFixedSize(intArrayOf(1, 224, 224, 3), DataType.UINT8)
 
-        val buffer = TensorImage.fromBitmap(resized)
-        val byteBuffer = buffer.buffer
-        inputFeature0.loadBuffer(byteBuffer)
+            val buffer = TensorImage.fromBitmap(resized)
 
-        val outputs = model.process(inputFeature0)
-        val outputFeature0 = outputs.outputFeature0AsTensorBuffer
+            val byteBuffer = buffer.buffer
+            inputFeature0.loadBuffer(byteBuffer)
 
-        val max = getMax(outputFeature0.floatArray)
-        tvText.text = townList[max]
-        model.close()
+            val outputs = model.process(inputFeature0)
+            val outputFeature0 = outputs.outputFeature0AsTensorBuffer
 
-        val predict = findViewById<Button>(R.id.btnPredict)
-        predict.setOnClickListener(View.OnClickListener {
-            Bitmap.createScaledBitmap(bitmap, 224, 224, true)
-        })
+            val max = getMax(outputFeature0.floatArray)
+            tvText.text = townList[max]
+            model.close()
+            val predict = findViewById<Button>(R.id.btnPredict)
+            predict.setOnClickListener { _ ->
+                Bitmap.createScaledBitmap(it, 224, 224, true)
+            }
+        }
     }
 
     override fun onActivityResult(requestCode: Int, resultCode: Int, data: Intent?) {
