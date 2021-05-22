@@ -1,3 +1,7 @@
 <resources>
     <string name="app_name">DemoImage</string>
+    <string name="tv_Predication">Select and Predict.</string>
+    <string name="btn_predict">predict</string>
+    <string name="btn_select">select</string>
+    <string name="btn_capture">Capture</string>
 </resources>

@@ -10,11 +10,15 @@ import android.view.View
 import android.widget.Button
 import android.widget.ImageView
 import android.widget.TextView
+import androidx.camera.core.ImageCapture
 import com.du.de.demoimage.ml.MobilenetV110224Quant
 import org.tensorflow.lite.DataType
 import org.tensorflow.lite.support.image.TensorImage
 import org.tensorflow.lite.support.tensorbuffer.TensorBuffer
+import java.io.File
+import java.util.concurrent.ExecutorService
 
+@Suppress("DEPRECATION")
 class MainActivity : AppCompatActivity() {
 
     private lateinit var bitmap: Bitmap
@@ -24,7 +28,7 @@ class MainActivity : AppCompatActivity() {
         super.onCreate(savedInstanceState)
         setContentView(R.layout.activity_main)
 
-        imageView = findViewById(R.id.ivImage)
+        imageView = findViewById(R.id.pvViewFinder)
         val fileName = "labels.txt"
         val inputString = application.assets.open(fileName).bufferedReader().use { it.readLine() }
         val townList = inputString.split("\n")
@@ -32,13 +36,13 @@ class MainActivity : AppCompatActivity() {
         val tvText = findViewById<TextView>(R.id.tvItemName)
 
         val select = findViewById<Button>(R.id.btnSelect)
-        select.setOnClickListener(View.OnClickListener {
-            val intent: Intent = Intent(Intent.ACTION_GET_CONTENT)
+        select.setOnClickListener {
+            val intent = Intent(Intent.ACTION_GET_CONTENT)
             "image/".also { intent.type = it }
 
             startActivityForResult(intent, 100)
 
-        })
+        }
 
         val resized: Bitmap = Bitmap.createScaledBitmap(bitmap, 224, 224, true)
         val model = MobilenetV110224Quant.newInstance(this)
@@ -72,8 +76,8 @@ class MainActivity : AppCompatActivity() {
     }
 
     private fun getMax(arr: FloatArray): Int {
-        var index: Int = 0
-        var min: Float = 0.0f
+        var index = 0
+        var min = 0.0f
 
         for (i in 0..100) {
             if (arr[i] > min) {
